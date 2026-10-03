@@ -2,8 +2,14 @@ import Header from "./components/Header"
 import CompanySummary from "./components/CompanySummary"
 import DriverPanel from "./components/DriverPanel"
 import KPIGrid from "./components/KPIGrid"
+import { baselineCompany } from "./data/baselineCompany"
+import { calculateProjection } from "./model/calculateProjection"
 
 function App() {
+  const projection = calculateProjection(baselineCompany);
+
+  console.log(projection)
+
   return (
     <>
       <Header />
@@ -15,7 +21,7 @@ function App() {
         />
         <div className="dashboard">
           <DriverPanel />
-          <KPIGrid />
+          <KPIGrid projection={projection} />
         </div>
       </main>
     </>  

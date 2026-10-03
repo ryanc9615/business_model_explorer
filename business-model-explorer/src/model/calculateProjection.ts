@@ -133,8 +133,54 @@ export function calculateProjection(
         beginningCash = endingCash;
     }
 
+    const finalMonth = months[months.length - 1];
+
+    const yearOneRevenue = months.reduce(
+        (total, month) => total + month.revenue,
+        0
+    );
+
+    const yearOneGrossProfit = months.reduce(
+        (total, month) => total + month.grossProfit,
+        0
+    )
+
+    const yearOneEbitda = months.reduce(
+        (total, month) => total + month.ebitda,
+        0
+    );
+
+    const cashOutMonth = months.find(
+        month => month.endingCash <=0
+    );
+
+    let runwayMonths: number | null = null;
+
+    if(assumptions.startingCash <=0) {
+        runwayMonths = 0;
+    } else if (cashOutMonth) {
+        const monthlyBurn = -cashOutMonth.ebitda;
+
+        if (monthlyBurn > 0) {
+            runwayMonths =
+                (cashOutMonth.month - 1) +
+                cashOutMonth.beginningCustomers / monthlyBurn;
+        }
+    };
+
+    const summary = {
+        exitCustomers: finalMonth.endingCustomers,
+        exitARR: finalMonth.arr,
+        yearOneRevenue,
+        yearOneGrossProfit,
+        yearOneEbitda,
+        endingCash: finalMonth.endingCash,
+        runwayMonths,
+    };
+
     return {
         months,
+        summary,
     };
 }
 

@@ -61,3 +61,45 @@ main {
     grid-template-columns: 1fr;
   }
 }
+
+.driver-control {
+  margin-bottom: 1.5rem;
+}
+
+.driver-control-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.driver-label {
+  font-weight: 500;
+}
+
+.driver-value-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.driver-value-box {
+  width: 90px;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  text-align: right;
+  font: inherit;
+}
+
+.driver-unit {
+  font-size: 0.95rem;
+  color: #444;
+  white-space: nowrap;
+}
+
+.driver-slider {
+  width: 100%;
+}

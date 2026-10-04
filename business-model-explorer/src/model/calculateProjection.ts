@@ -164,7 +164,7 @@ export function calculateProjection(
         if (monthlyBurn > 0) {
             runwayMonths =
                 (cashOutMonth.month - 1) +
-                cashOutMonth.beginningCustomers / monthlyBurn;
+                cashOutMonth.beginningCash / monthlyBurn;
         }
     };
 

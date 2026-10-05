@@ -5,11 +5,21 @@ import KPIGrid from "./components/KPIGrid";
 import { baselineCompany } from "./data/baselineCompany";
 import { calculateProjection } from "./model/calculateProjection";
 import { useState } from "react";
+import { ProjectionChart } from "./components/ProjectionChart";
+import { CausalExplorer } from "./components/CausalExplorer/CausalExplorer";
+
+const baselineProjection = calculateProjection(baselineCompany);
 
 function App() {
-  const [assumptions, setAssumptions] = useState(baselineCompany);
+  const [assumptions, setAssumptions] = useState(() =>
+    structuredClone(baselineCompany)
+  );
 
   const projection = calculateProjection(assumptions);
+
+  function handleResetScenario() {
+    setAssumptions(structuredClone(baselineCompany));
+  }
 
   const handleMonthlyPriceChange = (value: number) => {
     setAssumptions((current) => ({
@@ -19,14 +29,14 @@ function App() {
   };
 
   const handleSalesRepsChange = (salesReps: number) => {
-  setAssumptions((current) => ({
-    ...current,
-    acquisition: {
-      ...current.acquisition,
-      salesReps,
-    },
-  }));
-};
+    setAssumptions((current) => ({
+      ...current,
+      acquisition: {
+        ...current.acquisition,
+        salesReps,
+      },
+    }));
+  };
 
   const handleSalesProductivityChange = (
     opportunitiesPerRepPerMonth: number
@@ -86,12 +96,12 @@ function App() {
     }));
   };
 
-    const handleChurnChange = (monthlyChurnRate: number) => {
-      setAssumptions((current) => ({
-        ...current,
-        monthlyChurnRate,
-      }));
-    };
+  const handleChurnChange = (monthlyChurnRate: number) => {
+    setAssumptions((current) => ({
+      ...current,
+      monthlyChurnRate,
+    }));
+  };
 
   console.log(projection);
 
@@ -106,58 +116,80 @@ function App() {
         />
 
         <div className="dashboard">
-          <DriverPanel
-            monthlyPricePerCustomer={
-              assumptions.monthlyPrice
-            }
-            monthlyChurnRate={
-              assumptions.monthlyChurnRate
-            }
-            salesReps={
-              assumptions.acquisition.salesReps
-            }
-            opportunitiesPerRepPerMonth={
-              assumptions.acquisition.opportunitiesPerRepPerMonth
-            }
-            winRate={
-              assumptions.acquisition.winRate
-            }
-            marketingSpendPerMonth={
-              assumptions.acquisition.marketingSpendPerMonth
-            }
-            otherHeadcount={
-              assumptions.costs.otherHeadcount
-            }
-            grossMargin={
-              assumptions.costs.grossMargin
-            }
-            onMonthlyPriceChange={
-              handleMonthlyPriceChange
-            }
-            onMonthlyChurnRateChange={
-              handleChurnChange
-            }
-            onSalesRepsChange={
-              handleSalesRepsChange
-            }
-            onSalesProductivityChange={
-              handleSalesProductivityChange
-            }
-            onWinRateChange={
-              handleWinRateChange
-            }
-            onMarketingSpendChange={
-              handleMarketingSpendChange
-            }
-            onOtherHeadcountChange={
-              handleOtherHeadcountChange
-            }
-            onGrossMarginChange={
-              handleGrossMarginChange
-            }
+          <div className="driver-section">
+            <DriverPanel
+              monthlyPricePerCustomer={
+                assumptions.monthlyPrice
+              }
+              monthlyChurnRate={
+                assumptions.monthlyChurnRate
+              }
+              salesReps={
+                assumptions.acquisition.salesReps
+              }
+              opportunitiesPerRepPerMonth={
+                assumptions.acquisition.opportunitiesPerRepPerMonth
+              }
+              winRate={
+                assumptions.acquisition.winRate
+              }
+              marketingSpendPerMonth={
+                assumptions.acquisition.marketingSpendPerMonth
+              }
+              otherHeadcount={
+                assumptions.costs.otherHeadcount
+              }
+              grossMargin={
+                assumptions.costs.grossMargin
+              }
+              onMonthlyPriceChange={
+                handleMonthlyPriceChange
+              }
+              onMonthlyChurnRateChange={
+                handleChurnChange
+              }
+              onSalesRepsChange={
+                handleSalesRepsChange
+              }
+              onSalesProductivityChange={
+                handleSalesProductivityChange
+              }
+              onWinRateChange={
+                handleWinRateChange
+              }
+              onMarketingSpendChange={
+                handleMarketingSpendChange
+              }
+              onOtherHeadcountChange={
+                handleOtherHeadcountChange
+              }
+              onGrossMarginChange={
+                handleGrossMarginChange
+              }
+            />
+
+            <button
+              className="reset-button"
+              onClick={handleResetScenario}
+            >
+              Reset scenario
+            </button>
+          </div>
+
+          <KPIGrid
+            projection={projection}
+            baselineProjection={baselineProjection}
           />
 
-          <KPIGrid projection={projection} />
+          <ProjectionChart
+            projection={projection}
+            baselineProjection={baselineProjection}
+          />
+
+          <CausalExplorer />
+
+
+
         </div>
       </main>
     </>

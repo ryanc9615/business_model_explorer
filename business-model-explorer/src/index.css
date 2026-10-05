@@ -103,3 +103,87 @@ main {
 .driver-slider {
   width: 100%;
 }
+
+.driver-section {
+  position: relative;
+}
+
+.reset-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+
+  width: auto;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.kpi-comparison {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.projection-chart {
+  margin-top: 24px;
+  padding: 24px 32px 32px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.projection-chart__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.projection-chart__header h2 {
+  margin: 0;
+  text-align: center;
+  font-size: 32px;
+  line-height: 1.2;
+}
+
+.projection-chart__header p {
+  margin: 4px 0 0;
+  color: #6b7280;
+}
+
+.projection-chart__canvas {
+  width: 100%;
+  height: 400px;
+}
+
+.projection-chart__metrics {
+  display: flex;
+  width: fit-content;
+  gap: 4px;
+  padding: 4px;
+  background: #f3f4f6;
+  border-radius: 8px;
+}
+
+.projection-chart__metric {
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #6b7280;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.projection-chart__metric:hover {
+  color: #111827;
+}
+
+.projection-chart__metric--active {
+  background: white;
+  color: #111827;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}

@@ -1,18 +1,19 @@
 type CompanySummaryProps = {
-    companyName: string
-    description: string
-}
+  companyName: string;
+  description: string;
+};
 
 function CompanySummary({
-    companyName,
-    description,
+  description,
 }: CompanySummaryProps) {
-    return (
-        <section>
-            <h2>{companyName}</h2>
-            <p>{description}</p>
-        </section>
-    )
-}
+  return (
+    <section aria-labelledby="company-summary-heading">
+      <h2 id="company-summary-heading">
+        Company Overview
+      </h2>
 
-export default CompanySummary
+      <p>{description}</p>
+    </section>
+  );
+}
+export default CompanySummary;

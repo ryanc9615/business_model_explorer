@@ -1,29 +1,38 @@
 type KPICardProps = {
-    label: string
-    value: string
-    comparison?: string
-}
+  label: string;
+  value: number | string;
+  formatValue?: (value: number) => string;
+  comparison?: string;
+};
 
 function KPICard({
-    label,
-    value,
-    comparison,
+  label,
+  value,
+  formatValue,
+  comparison,
 }: KPICardProps) {
-    return (
-        <div className="kpi-card">
-        <span className="kpi-label">{label}</span>
+  const displayValue =
+    typeof value === "number" && formatValue
+      ? formatValue(value)
+      : value;
 
-        <strong className="kpi-value">
-            {value}
-        </strong>
+  return (
+    <div className="kpi-card">
+      <span className="kpi-label">
+        {label}
+      </span>
 
-        {comparison && (
-            <span className="kpi-comparison">
-            {comparison}
-            </span>
-        )}
-        </div>
-  )
+      <strong className="kpi-value">
+        {displayValue}
+      </strong>
+
+      {comparison && (
+        <span className="kpi-comparison">
+          {comparison}
+        </span>
+      )}
+    </div>
+  );
 }
 
-export default KPICard
+export default KPICard;

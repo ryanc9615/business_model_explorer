@@ -28,10 +28,15 @@ export function CausalExplorer() {
   }
 
   return (
-    <section className="causal-explorer">
+    <section
+      className="causal-explorer"
+      aria-labelledby="causal-explorer-heading"
+    >
       <div className="causal-explorer__header">
         <div>
-          <h2>What drives the business?</h2>
+          <h2 id="causal-explorer-heading">
+            What drives the business?
+          </h2>
 
           <p>
             Explore how operating decisions flow through
@@ -40,7 +45,11 @@ export function CausalExplorer() {
         </div>
       </div>
 
-      <div className="causal-explorer__tabs">
+      <div
+        className="causal-explorer__tabs"
+        role="group"
+        aria-label="Business outcome"
+      >
         {causalTrees.map((tree) => {
           const isActive = currentRoot.id === tree.id;
 
@@ -53,6 +62,7 @@ export function CausalExplorer() {
                   ? "causal-explorer__tab--active"
                   : ""
               }`}
+              aria-pressed={isActive}
               onClick={() => selectRoot(tree)}
             >
               {tree.label}
@@ -66,8 +76,7 @@ export function CausalExplorer() {
         aria-label="Causal explorer navigation"
       >
         {path.map((node, index) => {
-          const isCurrent =
-            index === path.length - 1;
+          const isCurrent = index === path.length - 1;
 
           return (
             <div
@@ -75,13 +84,19 @@ export function CausalExplorer() {
               className="causal-breadcrumbs__item"
             >
               {index > 0 && (
-                <span className="causal-breadcrumbs__separator">
+                <span
+                  className="causal-breadcrumbs__separator"
+                  aria-hidden="true"
+                >
                   ›
                 </span>
               )}
 
               {isCurrent ? (
-                <span className="causal-breadcrumbs__current">
+                <span
+                  className="causal-breadcrumbs__current"
+                  aria-current="page"
+                >
                   {node.label}
                 </span>
               ) : (
@@ -133,34 +148,12 @@ export function CausalExplorer() {
 
           <div className="causal-drivers__list">
             {currentNode.children.map((child) => {
-              const hasChildren =
-                Boolean(child.children?.length);
+              const hasChildren = Boolean(
+                child.children?.length
+              );
 
-              return (
-                <div
-                  key={child.id}
-                  className={`causal-child ${
-                    hasChildren
-                      ? "causal-child--clickable"
-                      : "causal-child--leaf"
-                  }`}
-                  role={hasChildren ? "button" : undefined}
-                  tabIndex={hasChildren ? 0 : undefined}
-                  onClick={() => drillInto(child)}
-                  onKeyDown={(event) => {
-                    if (!hasChildren) {
-                      return;
-                    }
-
-                    if (
-                      event.key === "Enter" ||
-                      event.key === " "
-                    ) {
-                      event.preventDefault();
-                      drillInto(child);
-                    }
-                  }}
-                >
+              const content = (
+                <>
                   <div className="causal-child__content">
                     <div className="causal-child__heading">
                       <span className="causal-child__label">
@@ -197,6 +190,29 @@ export function CausalExplorer() {
                       →
                     </span>
                   )}
+                </>
+              );
+
+              if (hasChildren) {
+                return (
+                  <button
+                    key={child.id}
+                    type="button"
+                    className="causal-child causal-child--clickable"
+                    onClick={() => drillInto(child)}
+                    aria-label={`Explore ${child.label}`}
+                  >
+                    {content}
+                  </button>
+                );
+              }
+
+              return (
+                <div
+                  key={child.id}
+                  className="causal-child causal-child--leaf"
+                >
+                  {content}
                 </div>
               );
             })}

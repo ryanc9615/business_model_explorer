@@ -1,12 +1,14 @@
+import { useState } from "react";
+
 import Header from "./components/Header";
 import CompanySummary from "./components/CompanySummary";
 import DriverPanel from "./components/DriverPanel";
 import KPIGrid from "./components/KPIGrid";
-import { baselineCompany } from "./data/baselineCompany";
-import { calculateProjection } from "./model/calculateProjection";
-import { useState } from "react";
 import { ProjectionChart } from "./components/ProjectionChart";
 import { CausalExplorer } from "./components/CausalExplorer/CausalExplorer";
+
+import { baselineCompany } from "./data/baselineCompany";
+import { calculateProjection } from "./model/calculateProjection";
 
 const baselineProjection = calculateProjection(baselineCompany);
 
@@ -21,14 +23,21 @@ function App() {
     setAssumptions(structuredClone(baselineCompany));
   }
 
-  const handleMonthlyPriceChange = (value: number) => {
+  function handleMonthlyPriceChange(value: number) {
     setAssumptions((current) => ({
       ...current,
       monthlyPrice: value,
     }));
-  };
+  }
 
-  const handleSalesRepsChange = (salesReps: number) => {
+  function handleChurnChange(monthlyChurnRate: number) {
+    setAssumptions((current) => ({
+      ...current,
+      monthlyChurnRate,
+    }));
+  }
+
+  function handleSalesRepsChange(salesReps: number) {
     setAssumptions((current) => ({
       ...current,
       acquisition: {
@@ -36,11 +45,11 @@ function App() {
         salesReps,
       },
     }));
-  };
+  }
 
-  const handleSalesProductivityChange = (
+  function handleSalesProductivityChange(
     opportunitiesPerRepPerMonth: number
-  ) => {
+  ) {
     setAssumptions((current) => ({
       ...current,
       acquisition: {
@@ -48,9 +57,9 @@ function App() {
         opportunitiesPerRepPerMonth,
       },
     }));
-  };
+  }
 
-  const handleWinRateChange = (winRate: number) => {
+  function handleWinRateChange(winRate: number) {
     setAssumptions((current) => ({
       ...current,
       acquisition: {
@@ -58,11 +67,11 @@ function App() {
         winRate,
       },
     }));
-  };
+  }
 
-  const handleMarketingSpendChange = (
+  function handleMarketingSpendChange(
     marketingSpendPerMonth: number
-  ) => {
+  ) {
     setAssumptions((current) => ({
       ...current,
       acquisition: {
@@ -70,11 +79,11 @@ function App() {
         marketingSpendPerMonth,
       },
     }));
-  };
+  }
 
-  const handleOtherHeadcountChange = (
+  function handleOtherHeadcountChange(
     otherHeadcount: number
-  ) => {
+  ) {
     setAssumptions((current) => ({
       ...current,
       costs: {
@@ -82,11 +91,21 @@ function App() {
         otherHeadcount,
       },
     }));
-  };
+  }
 
-  const handleGrossMarginChange = (
-    grossMargin: number
-  ) => {
+  function handleFixedOperatingCostsChange(
+    otherFixedOpexPerMonth: number
+  ) {
+    setAssumptions((current) => ({
+      ...current,
+      costs: {
+        ...current.costs,
+        otherFixedOpexPerMonth,
+      },
+    }));
+  }
+
+  function handleGrossMarginChange(grossMargin: number) {
     setAssumptions((current) => ({
       ...current,
       costs: {
@@ -94,22 +113,13 @@ function App() {
         grossMargin,
       },
     }));
-  };
-
-  const handleChurnChange = (monthlyChurnRate: number) => {
-    setAssumptions((current) => ({
-      ...current,
-      monthlyChurnRate,
-    }));
-  };
-
-  console.log(projection);
+  }
 
   return (
     <>
       <Header />
 
-      <main>
+      <main className="app-shell">
         <CompanySummary
           companyName="Northstar Ops"
           description="B2B workflow software"
@@ -117,6 +127,17 @@ function App() {
 
         <div className="dashboard">
           <div className="driver-section">
+            <div className="driver-section__header">
+              <h2>Business Drivers</h2>
+
+              <button
+                type="button"
+                className="reset-button"
+                onClick={handleResetScenario}
+              >
+                Reset scenario
+              </button>
+            </div>
             <DriverPanel
               monthlyPricePerCustomer={
                 assumptions.monthlyPrice
@@ -128,16 +149,21 @@ function App() {
                 assumptions.acquisition.salesReps
               }
               opportunitiesPerRepPerMonth={
-                assumptions.acquisition.opportunitiesPerRepPerMonth
+                assumptions.acquisition
+                  .opportunitiesPerRepPerMonth
               }
               winRate={
                 assumptions.acquisition.winRate
               }
               marketingSpendPerMonth={
-                assumptions.acquisition.marketingSpendPerMonth
+                assumptions.acquisition
+                  .marketingSpendPerMonth
               }
               otherHeadcount={
                 assumptions.costs.otherHeadcount
+              }
+              fixedOperatingCostsPerMonth={
+                assumptions.costs.otherFixedOpexPerMonth
               }
               grossMargin={
                 assumptions.costs.grossMargin
@@ -163,17 +189,15 @@ function App() {
               onOtherHeadcountChange={
                 handleOtherHeadcountChange
               }
+              onFixedOperatingCostsChange={
+                handleFixedOperatingCostsChange
+              }
               onGrossMarginChange={
                 handleGrossMarginChange
               }
             />
 
-            <button
-              className="reset-button"
-              onClick={handleResetScenario}
-            >
-              Reset scenario
-            </button>
+          
           </div>
 
           <KPIGrid
@@ -187,9 +211,6 @@ function App() {
           />
 
           <CausalExplorer />
-
-
-
         </div>
       </main>
     </>

@@ -152,7 +152,9 @@ describe('calculateProjection', () => {
 
     expect(lower.marketingOpportunities).toBe(20)
     expect(higher.marketingOpportunities).toBe(40)
-    expect(higher.newCustomers).toBeGreaterThan(lower.newCustomers)
+    expect(higher.newCustomers).toBeGreaterThan(
+      lower.newCustomers,
+    )
   })
 
   it('increases gross profit when gross margin increases', () => {
@@ -191,8 +193,136 @@ describe('calculateProjection', () => {
     expect(higher.ebitda).toBeGreaterThan(lower.ebitda)
   })
 
+  // Phase 14 — valid boundary conditions
+
+  it('handles a zero-acquisition zero-revenue scenario without invalid numbers', () => {
+    const assumptions = makeAssumptions({
+      monthlyPrice: 0,
+      monthlyChurnRate: 0.20,
+      acquisition: {
+        salesReps: 0,
+        marketingSpendPerMonth: 0,
+      },
+      costs: {
+        grossMargin: 0,
+      },
+    })
+
+    const projection = calculateProjection(assumptions)
+    const month1 = projection.months[0]
+
+    expect(month1.salesOpportunities).toBe(0)
+    expect(month1.marketingOpportunities).toBe(0)
+    expect(month1.newCustomers).toBe(0)
+
+    expect(month1.churnedCustomers).toBeCloseTo(24)
+    expect(month1.endingCustomers).toBeCloseTo(96)
+
+    expect(month1.mrr).toBe(0)
+    expect(month1.arr).toBe(0)
+    expect(month1.revenue).toBe(0)
+    expect(month1.grossProfit).toBe(0)
+
+    expect(month1.salesPayroll).toBe(0)
+    expect(month1.operatingCosts).toBeCloseTo(130_000)
+    expect(month1.ebitda).toBeCloseTo(-130_000)
+    expect(month1.endingCash).toBeCloseTo(1_070_000)
+
+    expect(projection.summary.runwayMonths).toBeCloseTo(
+      9.230769,
+      5,
+    )
+  })
+
+  it('returns only finite numeric monthly projection values', () => {
+    const assumptions = makeAssumptions({
+      monthlyPrice: 0,
+      monthlyChurnRate: 0.20,
+      acquisition: {
+        salesReps: 0,
+        marketingSpendPerMonth: 0,
+      },
+      costs: {
+        grossMargin: 0,
+      },
+    })
+
+    const projection = calculateProjection(assumptions)
+
+    for (const month of projection.months) {
+      for (const value of Object.values(month)) {
+        if (typeof value === 'number') {
+          expect(Number.isFinite(value)).toBe(true)
+        }
+      }
+    }
+  })
+
+  // Phase 14 — invalid input protection
+
+  it('does not return Infinity when marketing cost per opportunity is zero', () => {
+    const assumptions = makeAssumptions({
+      acquisition: {
+        marketingCostPerOpportunity: 0,
+      },
+    })
+
+    const projection = calculateProjection(assumptions)
+
+    expect(
+      projection.months[0].marketingOpportunities,
+    ).toBe(0)
+
+    expect(
+      Number.isFinite(
+        projection.months[0].marketingOpportunities,
+      ),
+    ).toBe(true)
+  })
+
+  it('handles invalid runtime inputs without producing NaN or Infinity', () => {
+    const brokenAssumptions =
+      structuredClone(baselineCompany)
+
+    Object.assign(brokenAssumptions, {
+      monthlyPrice: undefined,
+      monthlyChurnRate: Number.NaN,
+    })
+
+    Object.assign(brokenAssumptions.acquisition, {
+      salesReps: -5,
+      marketingSpendPerMonth: Number.POSITIVE_INFINITY,
+      marketingCostPerOpportunity: 0,
+    })
+
+    Object.assign(brokenAssumptions.costs, {
+      grossMargin: -1,
+    })
+
+    const projection =
+      calculateProjection(brokenAssumptions)
+
+    for (const month of projection.months) {
+      for (const value of Object.values(month)) {
+        if (typeof value === 'number') {
+          expect(Number.isFinite(value)).toBe(true)
+        }
+      }
+
+      expect(
+        month.endingCustomers,
+      ).toBeGreaterThanOrEqual(0)
+    }
+
+    expect(
+      projection.summary.runwayMonths === null ||
+        projection.summary.runwayMonths >= 0,
+    ).toBe(true)
+  })
+
   it('carries cash forward through the projection', () => {
-    const months = calculateProjection(baselineCompany).months
+    const months =
+      calculateProjection(baselineCompany).months
 
     expect(months[0].beginningCash).toBe(
       baselineCompany.startingCash,
@@ -200,11 +330,14 @@ describe('calculateProjection', () => {
 
     for (let i = 0; i < months.length; i++) {
       expect(months[i].endingCash).toBeCloseTo(
-        months[i].beginningCash + months[i].ebitda,
+        months[i].beginningCash +
+          months[i].ebitda,
       )
 
       if (i > 0) {
-        expect(months[i].beginningCash).toBeCloseTo(
+        expect(
+          months[i].beginningCash,
+        ).toBeCloseTo(
           months[i - 1].endingCash,
         )
       }

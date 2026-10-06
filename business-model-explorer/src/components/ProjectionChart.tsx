@@ -12,6 +12,10 @@ import {
 } from "recharts";
 
 import { calculateProjection } from "../model/calculateProjection";
+import {
+  formatCurrency,
+  formatNumber,
+} from "../utils/formatters";
 
 type Projection = ReturnType<typeof calculateProjection>;
 type ProjectionMonth = Projection["months"][number];
@@ -35,40 +39,29 @@ type MetricDefinition = {
   format: (value: number) => string;
 };
 
-const currencyFormatter = new Intl.NumberFormat("en-GB", {
-  style: "currency",
-  currency: "GBP",
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
-
-const numberFormatter = new Intl.NumberFormat("en-GB", {
-  maximumFractionDigits: 0,
-});
-
 const metricDefinitions: Record<Metric, MetricDefinition> = {
   customers: {
     label: "Customers",
     field: "endingCustomers",
-    format: (value) => numberFormatter.format(value),
+    format: (value) => formatNumber(value),
   },
 
   revenue: {
     label: "Revenue",
     field: "revenue",
-    format: (value) => currencyFormatter.format(value),
+    format: (value) => formatCurrency(value),
   },
 
   ebitda: {
     label: "EBITDA",
     field: "ebitda",
-    format: (value) => currencyFormatter.format(value),
+    format: (value) => formatCurrency(value),
   },
 
   cash: {
     label: "Cash",
     field: "endingCash",
-    format: (value) => currencyFormatter.format(value),
+    format: (value) => formatCurrency(value),
   },
 };
 
@@ -76,74 +69,96 @@ export function ProjectionChart({
   projection,
   baselineProjection,
 }: ProjectionChartProps) {
-  const [metric, setMetric] = useState<Metric>("customers");
+  const [metric, setMetric] =
+    useState<Metric>("customers");
 
-  const metricDefinition = metricDefinitions[metric];
+  const metricDefinition =
+    metricDefinitions[metric];
 
   const chartData = projection.months.map(
     (scenarioMonth: ProjectionMonth, index) => {
-      const baselineMonth = baselineProjection.months[index];
+      const baselineMonth =
+        baselineProjection.months[index];
 
       return {
         month: scenarioMonth.month,
-        baseline: baselineMonth[metricDefinition.field],
-        scenario: scenarioMonth[metricDefinition.field],
+        baseline:
+          baselineMonth[metricDefinition.field],
+        scenario:
+          scenarioMonth[metricDefinition.field],
       };
     }
   );
 
   return (
     <section className="projection-chart">
-        <div className="projection-chart__header">
-            <h2>12-Month Projection</h2>
+      <div className="projection-chart__header">
+        <h2>12-Month Projection</h2>
 
-            <div className="projection-chart__metrics">
-            {(Object.keys(metricDefinitions) as Metric[]).map((metricKey) => (
-                <button
+        <div
+          className="projection-chart__metrics"
+          role="group"
+          aria-label="Projection metric"
+        >
+          {(Object.keys(metricDefinitions) as Metric[]).map(
+            (metricKey) => (
+              <button
                 key={metricKey}
                 type="button"
                 className={
-                    metric === metricKey
+                  metric === metricKey
                     ? "projection-chart__metric projection-chart__metric--active"
                     : "projection-chart__metric"
                 }
+                aria-pressed={metric === metricKey}
                 onClick={() => setMetric(metricKey)}
-                >
+              >
                 {metricDefinitions[metricKey].label}
-                </button>
-            ))}
-            </div>
+              </button>
+            )
+          )}
         </div>
+      </div>
 
       <div className="projection-chart__canvas">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart 
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+        >
+          <LineChart
             data={chartData}
             margin={{
-                top: 10,
-                right: 24,
-                left: -8,
-                bottom: 10,
-            }}>
+              top: 10,
+              right: 24,
+              left: -8,
+              bottom: 10,
+            }}
+          >
             <CartesianGrid strokeDasharray="3 3" />
 
             <XAxis
               dataKey="month"
               interval={0}
               tickMargin={8}
-              tick={{ fontSize: 13}}
+              tick={{ fontSize: 13 }}
             />
 
             <YAxis
               tickFormatter={(value) =>
-                metricDefinition.format(Number(value))
+                metricDefinition.format(
+                  Number(value)
+                )
               }
             />
 
             <Tooltip
-              labelFormatter={(month) => `Month ${month}`}
+              labelFormatter={(month) =>
+                `Month ${month}`
+              }
               formatter={(value) =>
-                metricDefinition.format(Number(value))
+                metricDefinition.format(
+                  Number(value)
+                )
               }
             />
 

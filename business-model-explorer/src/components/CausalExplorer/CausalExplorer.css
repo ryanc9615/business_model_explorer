@@ -242,6 +242,7 @@
 .causal-child__content {
   min-width: 0;
   flex: 1;
+  text-align: left;
 }
 
 .causal-child__heading {
@@ -259,6 +260,8 @@
 }
 
 .causal-child__formula {
+  text-align: left;
+  width: 100%;
   margin-top: 0.4rem;
   color: #475467;
   font-size: 0.9rem;

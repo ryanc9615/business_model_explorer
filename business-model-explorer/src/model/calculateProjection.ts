@@ -26,81 +26,215 @@ export interface MonthlyProjection {
 }
 
 
+// Phase 14 — defensive input helpers
+
+function finiteOrZero(value: unknown): number {
+    return typeof value === "number" && Number.isFinite(value)
+        ? value
+        : 0;
+}
+
+function nonNegative(value: unknown): number {
+    return Math.max(0, finiteOrZero(value));
+}
+
+function rate(value: unknown): number {
+    return Math.min(1, nonNegative(value));
+}
+
+function safeDivide(
+    numerator: number,
+    denominator: number
+): number {
+    if (
+        !Number.isFinite(numerator) ||
+        !Number.isFinite(denominator) ||
+        denominator <= 0
+    ) {
+        return 0;
+    }
+
+    return numerator / denominator;
+}
+
+
+// Phase 14 — normalise assumptions before calculation
+
+function normaliseAssumptions(
+    assumptions: CompanyAssumptions | null | undefined
+): CompanyAssumptions {
+    return {
+        startingCustomers: nonNegative(
+            assumptions?.startingCustomers
+        ),
+
+        startingCash: nonNegative(
+            assumptions?.startingCash
+        ),
+
+        monthlyPrice: nonNegative(
+            assumptions?.monthlyPrice
+        ),
+
+        monthlyChurnRate: rate(
+            assumptions?.monthlyChurnRate
+        ),
+
+        paymentTermsDays: nonNegative(
+            assumptions?.paymentTermsDays
+        ),
+
+        acquisition: {
+            salesReps: nonNegative(
+                assumptions?.acquisition?.salesReps
+            ),
+
+            opportunitiesPerRepPerMonth: nonNegative(
+                assumptions?.acquisition
+                    ?.opportunitiesPerRepPerMonth
+            ),
+
+            winRate: rate(
+                assumptions?.acquisition?.winRate
+            ),
+
+            marketingSpendPerMonth: nonNegative(
+                assumptions?.acquisition
+                    ?.marketingSpendPerMonth
+            ),
+
+            marketingCostPerOpportunity: nonNegative(
+                assumptions?.acquisition
+                    ?.marketingCostPerOpportunity
+            ),
+        },
+
+        costs: {
+            salesRepMonthlyCost: nonNegative(
+                assumptions?.costs?.salesRepMonthlyCost
+            ),
+
+            otherHeadcount: nonNegative(
+                assumptions?.costs?.otherHeadcount
+            ),
+
+            otherEmployeeMonthlyCost: nonNegative(
+                assumptions?.costs
+                    ?.otherEmployeeMonthlyCost
+            ),
+
+            otherFixedOpexPerMonth: nonNegative(
+                assumptions?.costs
+                    ?.otherFixedOpexPerMonth
+            ),
+
+            grossMargin: rate(
+                assumptions?.costs?.grossMargin
+            ),
+        },
+    };
+}
+
 
 export function calculateProjection(
     assumptions: CompanyAssumptions
 ) {
-    let beginningCustomers = assumptions.startingCustomers;
-    let beginningCash = assumptions.startingCash;
-    
+    const safeAssumptions =
+        normaliseAssumptions(assumptions);
+
+    let beginningCustomers =
+        safeAssumptions.startingCustomers;
+
+    let beginningCash =
+        safeAssumptions.startingCash;
+
     const months: MonthlyProjection[] = [];
 
     for (let month = 1; month <= 12; month++) {
 
         // Acquisitions
-        const salesOpportunities = 
-            assumptions.acquisition.salesReps *
-            assumptions.acquisition.opportunitiesPerRepPerMonth;
-        
+        const salesOpportunities =
+            safeAssumptions.acquisition.salesReps *
+            safeAssumptions.acquisition
+                .opportunitiesPerRepPerMonth;
+
         const marketingOpportunities =
-            assumptions.acquisition.marketingSpendPerMonth /
-            assumptions.acquisition.marketingCostPerOpportunity;
-        
-        const totalOpportunities = 
-            salesOpportunities + marketingOpportunities;
+            safeDivide(
+                safeAssumptions.acquisition
+                    .marketingSpendPerMonth,
+                safeAssumptions.acquisition
+                    .marketingCostPerOpportunity
+            );
+
+        const totalOpportunities =
+            salesOpportunities +
+            marketingOpportunities;
 
         const newCustomers =
             totalOpportunities *
-            assumptions.acquisition.winRate;
+            safeAssumptions.acquisition.winRate;
+
 
         // Customers
         const churnedCustomers =
             beginningCustomers *
-            assumptions.monthlyChurnRate;
-        
+            safeAssumptions.monthlyChurnRate;
+
         const endingCustomers =
-            beginningCustomers +
-            newCustomers -
-            churnedCustomers;
+            Math.max(
+                0,
+                beginningCustomers +
+                newCustomers -
+                churnedCustomers
+            );
+
 
         // Revenue
         const mrr =
             endingCustomers *
-            assumptions.monthlyPrice;
-        
+            safeAssumptions.monthlyPrice;
+
         const arr = mrr * 12;
 
         const revenue = mrr;
 
+
         // Profit
-        const grossProfit = 
+        const grossProfit =
             revenue *
-            assumptions.costs.grossMargin;
+            safeAssumptions.costs.grossMargin;
+
 
         // OPEX
         const salesPayroll =
-            assumptions.acquisition.salesReps *
-            assumptions.costs.salesRepMonthlyCost;
-        
+            safeAssumptions.acquisition.salesReps *
+            safeAssumptions.costs.salesRepMonthlyCost;
+
         const otherPayroll =
-            assumptions.costs.otherHeadcount *
-            assumptions.costs.otherEmployeeMonthlyCost;
+            safeAssumptions.costs.otherHeadcount *
+            safeAssumptions.costs
+                .otherEmployeeMonthlyCost;
 
         const operatingCosts =
             salesPayroll +
             otherPayroll +
-            assumptions.acquisition.marketingSpendPerMonth +
-            assumptions.costs.otherFixedOpexPerMonth;
-        
-        //EBITDA
+            safeAssumptions.acquisition
+                .marketingSpendPerMonth +
+            safeAssumptions.costs
+                .otherFixedOpexPerMonth;
+
+
+        // EBITDA
         const ebitda =
-            grossProfit - 
+            grossProfit -
             operatingCosts;
+
 
         // Cash
         const endingCash =
             beginningCash +
             ebitda;
+
 
         const monthResult: MonthlyProjection = {
             month,
@@ -128,55 +262,88 @@ export function calculateProjection(
         };
 
         months.push(monthResult);
-        
+
         beginningCustomers = endingCustomers;
         beginningCash = endingCash;
     }
 
-    const finalMonth = months[months.length - 1];
+
+    const finalMonth =
+        months[months.length - 1];
+
 
     const yearOneRevenue = months.reduce(
-        (total, month) => total + month.revenue,
+        (total, month) =>
+            total + month.revenue,
         0
     );
 
     const yearOneGrossProfit = months.reduce(
-        (total, month) => total + month.grossProfit,
-        0
-    )
-
-    const yearOneEbitda = months.reduce(
-        (total, month) => total + month.ebitda,
+        (total, month) =>
+            total + month.grossProfit,
         0
     );
 
+    const yearOneEbitda = months.reduce(
+        (total, month) =>
+            total + month.ebitda,
+        0
+    );
+
+
+    // Runway
     const cashOutMonth = months.find(
-        month => month.endingCash <=0
+        month => month.endingCash <= 0
     );
 
     let runwayMonths: number | null = null;
 
-    if(assumptions.startingCash <=0) {
+    if (safeAssumptions.startingCash <= 0) {
         runwayMonths = 0;
     } else if (cashOutMonth) {
-        const monthlyBurn = -cashOutMonth.ebitda;
+        const monthlyBurn =
+            -cashOutMonth.ebitda;
 
         if (monthlyBurn > 0) {
             runwayMonths =
                 (cashOutMonth.month - 1) +
-                cashOutMonth.beginningCash / monthlyBurn;
+                safeDivide(
+                    cashOutMonth.beginningCash,
+                    monthlyBurn
+                );
         }
-    };
+    }
+
+
+    // Final runway protection
+    if (
+        runwayMonths !== null &&
+        (
+            !Number.isFinite(runwayMonths) ||
+            runwayMonths < 0
+        )
+    ) {
+        runwayMonths = 0;
+    }
+
 
     const summary = {
-        exitCustomers: finalMonth.endingCustomers,
-        exitARR: finalMonth.arr,
+        exitCustomers:
+            finalMonth.endingCustomers,
+
+        exitARR:
+            finalMonth.arr,
+
         yearOneRevenue,
         yearOneGrossProfit,
         yearOneEbitda,
-        endingCash: finalMonth.endingCash,
+
+        endingCash:
+            finalMonth.endingCash,
+
         runwayMonths,
     };
+
 
     return {
         months,

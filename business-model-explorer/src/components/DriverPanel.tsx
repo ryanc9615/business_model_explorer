@@ -1,4 +1,9 @@
 import DriverControl from "./DriverControl";
+import {
+  formatCurrency,
+  formatNumber,
+  formatPercent,
+} from "../utils/formatters";
 
 type DriverPanelProps = {
   monthlyPricePerCustomer: number;
@@ -8,6 +13,7 @@ type DriverPanelProps = {
   winRate: number;
   marketingSpendPerMonth: number;
   otherHeadcount: number;
+  fixedOperatingCostsPerMonth: number;
   grossMargin: number;
 
   onMonthlyPriceChange: (value: number) => void;
@@ -17,6 +23,7 @@ type DriverPanelProps = {
   onWinRateChange: (value: number) => void;
   onMarketingSpendChange: (value: number) => void;
   onOtherHeadcountChange: (value: number) => void;
+  onFixedOperatingCostsChange: (value: number) => void;
   onGrossMarginChange: (value: number) => void;
 };
 
@@ -28,6 +35,7 @@ function DriverPanel({
   winRate,
   marketingSpendPerMonth,
   otherHeadcount,
+  fixedOperatingCostsPerMonth,
   grossMargin,
   onMonthlyPriceChange,
   onMonthlyChurnRateChange,
@@ -36,19 +44,19 @@ function DriverPanel({
   onWinRateChange,
   onMarketingSpendChange,
   onOtherHeadcountChange,
+  onFixedOperatingCostsChange,
   onGrossMarginChange,
 }: DriverPanelProps) {
   return (
     <section>
-      <h2>Business Drivers</h2>
 
       <DriverControl
         label="Monthly price"
         value={monthlyPricePerCustomer}
-        min={500}
+        min={0}
         max={5000}
         step={10}
-        prefix="£"
+        formatValue={(value) => formatCurrency(value)}
         onChange={onMonthlyPriceChange}
       />
 
@@ -58,8 +66,9 @@ function DriverPanel({
         min={0}
         max={20}
         step={0.1}
-        prefix="%"
-        formatValue={(value) => value.toFixed(1)}
+        formatValue={(value) =>
+          formatPercent(value / 100, 1)
+        }
         onChange={(value) =>
           onMonthlyChurnRateChange(value / 100)
         }
@@ -71,7 +80,7 @@ function DriverPanel({
         min={0}
         max={50}
         step={1}
-        prefix="#"
+        formatValue={(value) => formatNumber(value)}
         onChange={onSalesRepsChange}
       />
 
@@ -81,7 +90,7 @@ function DriverPanel({
         min={0}
         max={50}
         step={1}
-        prefix="#"
+        formatValue={(value) => formatNumber(value)}
         onChange={onSalesProductivityChange}
       />
 
@@ -91,21 +100,21 @@ function DriverPanel({
         min={0}
         max={100}
         step={1}
-        prefix="%"
-        formatValue={(value) => value.toFixed(0)}
+        formatValue={(value) =>
+          formatPercent(value / 100, 0)
+        }
         onChange={(value) =>
           onWinRateChange(value / 100)
         }
       />
 
       <DriverControl
-        label="Monthly Marketing spend"
+        label="Monthly marketing spend"
         value={marketingSpendPerMonth}
         min={0}
         max={100000}
         step={1000}
-        prefix="£"
-        formatValue={(value) => value.toLocaleString()}
+        formatValue={(value) => formatCurrency(value)}
         onChange={onMarketingSpendChange}
       />
 
@@ -115,8 +124,18 @@ function DriverPanel({
         min={0}
         max={50}
         step={1}
-        prefix="#"
+        formatValue={(value) => formatNumber(value)}
         onChange={onOtherHeadcountChange}
+      />
+
+      <DriverControl
+        label="Fixed operating costs"
+        value={fixedOperatingCostsPerMonth}
+        min={0}
+        max={100000}
+        step={1000}
+        formatValue={(value) => formatCurrency(value)}
+        onChange={onFixedOperatingCostsChange}
       />
 
       <DriverControl
@@ -125,8 +144,9 @@ function DriverPanel({
         min={0}
         max={100}
         step={1}
-        prefix="%"
-        formatValue={(value) => value.toFixed(0)}
+        formatValue={(value) =>
+          formatPercent(value / 100, 0)
+        }
         onChange={(value) =>
           onGrossMarginChange(value / 100)
         }

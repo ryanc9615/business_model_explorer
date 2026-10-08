@@ -130,7 +130,7 @@ export function ProjectionChart({
             margin={{
               top: 10,
               right: 24,
-              left: -8,
+              left: 24,
               bottom: 10,
             }}
           >
@@ -143,12 +143,13 @@ export function ProjectionChart({
               tick={{ fontSize: 13 }}
             />
 
+
             <YAxis
-              tickFormatter={(value) =>
-                metricDefinition.format(
-                  Number(value)
-                )
-              }
+             width={95}
+             tickMargin={8}
+             tickFormatter={(value) =>
+             metricDefinition.format(Number(value))
+            }
             />
 
             <Tooltip
